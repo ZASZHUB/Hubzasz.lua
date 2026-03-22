@@ -1,148 +1,265 @@
--- ZASZ HUB MOBILE
+-- ZASZ HUB DEV EDITION
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local LP = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- SETTINGS
-local hitboxSize = 10
-local transparency = 0.5
-local flySpeed = 60
-local flying = false
-local esp = false
+-- SETTINGS (SESSION SAVE)
+local Settings = {
+	Hitbox=false,
+	Size=10,
+	ESP=false,
+	Speed=16,
+	Fly=false,
+	Target=false,
+	Theme="Red"
+}
+
+local currentTarget=nil
 
 -- GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "ZASZ_MOBILE"
+gui.Name = "ZASZ_DEV"
 
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 260, 0, 300)
-main.Position = UDim2.new(0.1,0,0.3,0)
-main.BackgroundColor3 = Color3.fromRGB(15,15,15)
-main.Active = true
-main.Draggable = true
-
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1,0,0,40)
-title.Text = "📱 ZASZ HUB"
-title.TextColor3 = Color3.fromRGB(255,255,0)
-title.BackgroundTransparency = 1
-title.TextScaled = true
-
--- CLOSE / OPEN
-local close = Instance.new("TextButton", main)
-close.Text = "X"
-close.Size = UDim2.new(0,30,0,30)
-close.Position = UDim2.new(1,-35,0,5)
-
+-- FLOAT BUTTON
 local open = Instance.new("TextButton", gui)
 open.Size = UDim2.new(0,50,0,50)
-open.Position = UDim2.new(0,80,0,80)
+open.Position = UDim2.new(0.05,0,0.4,0)
 open.Text = "Z"
-open.Visible = false
-open.BackgroundColor3 = Color3.fromRGB(255,255,0)
-open.Active = true
+open.BackgroundColor3 = Color3.fromRGB(255,0,0)
+open.TextScaled = true
 open.Draggable = true
+Instance.new("UICorner", open).CornerRadius = UDim.new(1,0)
 
-close.MouseButton1Click:Connect(function()
-	main.Visible = false
-	open.Visible = true
+-- MAIN
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0,360,0,300)
+main.Position = UDim2.new(0.1,0,0.3,0)
+main.BackgroundColor3 = Color3.fromRGB(20,20,20)
+main.Active = true
+main.Draggable = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,14)
+
+-- GRADIENT
+local grad = Instance.new("UIGradient", main)
+grad.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(100,0,0))
+}
+
+spawn(function()
+	while true do
+		TweenService:Create(grad, TweenInfo.new(4), {Rotation = grad.Rotation + 180}):Play()
+		wait(4)
+	end
 end)
 
-open.MouseButton1Click:Connect(function()
-	main.Visible = true
-	open.Visible = false
-end)
+-- TITLE
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,30)
+title.Text = "👑 ZASZ DEV HUB"
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundTransparency = 1
+
+-- TABS
+local tabs = {"Combat","Player","Visuals","Aim","Config"}
+local frames = {}
+
+for i,name in ipairs(tabs) do
+	local btn = Instance.new("TextButton", main)
+	btn.Size = UDim2.new(0.19,0,0,25)
+	btn.Position = UDim2.new((i-1)*0.2,0,0,35)
+	btn.Text = name
+	btn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	Instance.new("UICorner", btn)
+	
+	local frame = Instance.new("Frame", main)
+	frame.Size = UDim2.new(1,0,0,210)
+	frame.Position = UDim2.new(0,0,0,65)
+	frame.BackgroundTransparency = 1
+	frame.Visible = (i==1)
+	frames[name]=frame
+	
+	btn.MouseButton1Click:Connect(function()
+		for _,f in pairs(frames) do f.Visible=false end
+		frame.Visible=true
+	end)
+end
 
 -- UI HELPERS
-local function button(y,text,callback)
-	local b = Instance.new("TextButton", main)
-	b.Size = UDim2.new(0,220,0,35)
-	b.Position = UDim2.new(0,20,0,y)
-	b.Text = text
-	b.MouseButton1Click:Connect(callback)
-	return b
+local function toggle(parent,text,y,key)
+	local t = Instance.new("TextButton", parent)
+	t.Size = UDim2.new(0.8,0,0,30)
+	t.Position = UDim2.new(0.1,0,0,y)
+	t.Text = text.." : OFF"
+	t.BackgroundColor3 = Color3.fromRGB(170,0,0)
+	Instance.new("UICorner", t)
+
+	t.MouseButton1Click:Connect(function()
+		Settings[key]=not Settings[key]
+		t.Text = text.." : "..(Settings[key] and "ON" or "OFF")
+		t.BackgroundColor3 = Settings[key] and Color3.fromRGB(0,170,0) or Color3.fromRGB(170,0,0)
+	end)
 end
 
-local function box(y,text)
-	local b = Instance.new("TextBox", main)
-	b.Size = UDim2.new(0,220,0,30)
-	b.Position = UDim2.new(0,20,0,y)
-	b.PlaceholderText = text
-	return b
-end
-
--- HITBOX LOOP
-RunService.RenderStepped:Connect(function()
-	for _,p in pairs(Players:GetPlayers()) do
-		if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-			local hrp = p.Character.HumanoidRootPart
-			hrp.Size = Vector3.new(hitboxSize,hitboxSize,hitboxSize)
-			hrp.Transparency = transparency
-			hrp.Material = Enum.Material.Neon
-			hrp.BrickColor = BrickColor.new("New Yeller")
-			hrp.CanCollide = false
+local function slider(parent,text,min,max,y,key)
+	local label = Instance.new("TextLabel", parent)
+	label.Size = UDim2.new(1,0,0,20)
+	label.Position = UDim2.new(0,0,0,y)
+	label.Text = text..": "..Settings[key]
+	label.TextColor3 = Color3.new(1,1,1)
+	label.BackgroundTransparency = 1
+	
+	local bar = Instance.new("Frame", parent)
+	bar.Size = UDim2.new(0.8,0,0,8)
+	bar.Position = UDim2.new(0.1,0,0,y+20)
+	bar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	Instance.new("UICorner", bar)
+	
+	local fill = Instance.new("Frame", bar)
+	fill.Size = UDim2.new(Settings[key]/max,0,1,0)
+	fill.BackgroundColor3 = Color3.fromRGB(255,0,0)
+	Instance.new("UICorner", fill)
+	
+	local knob = Instance.new("Frame", bar)
+	knob.Size = UDim2.new(0,14,0,14)
+	knob.Position = UDim2.new(Settings[key]/max,-7,0.5,-7)
+	knob.BackgroundColor3 = Color3.fromRGB(255,0,0)
+	Instance.new("UICorner", knob)
+	
+	local dragging=false
+	
+	knob.InputBegan:Connect(function(i)
+		if i.UserInputType.Name=="Touch" or i.UserInputType.Name=="MouseButton1" then
+			dragging=true
 		end
-	end
-end)
-
--- ESP
-local function addESP(p)
-	if p ~= LP then
-		p.CharacterAdded:Connect(function(c)
-			local h = Instance.new("Highlight", c)
-			h.FillColor = Color3.new(1,1,0)
-			h.FillTransparency = 0.4
-		end)
-	end
-end
-
-button(60,"Toggle ESP",function()
-	esp = not esp
-	if esp then
-		for _,p in pairs(Players:GetPlayers()) do
-			addESP(p)
-		end
-	end
-end)
-
--- FLY BUTTON
-local flyBtn = button(100,"Toggle Fly",function()
-	flying = not flying
-end)
-
--- FLY SYSTEM
-local bv
-RunService.RenderStepped:Connect(function()
-	if flying then
-		local char = LP.Character
-		if char and char:FindFirstChild("HumanoidRootPart") then
-			local hrp = char.HumanoidRootPart
+	end)
+	
+	knob.InputEnded:Connect(function()
+		dragging=false
+	end)
+	
+	bar.InputChanged:Connect(function(i)
+		if dragging then
+			local rel = (i.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X
+			rel = math.clamp(rel,0,1)
+			local val = math.floor(min + (max-min)*rel)
 			
-			if not bv then
-				bv = Instance.new("BodyVelocity", hrp)
-				bv.MaxForce = Vector3.new(1e9,1e9,1e9)
+			fill.Size = UDim2.new(rel,0,1,0)
+			knob.Position = UDim2.new(rel,-7,0.5,-7)
+			label.Text = text..": "..val
+			
+			Settings[key]=val
+		end
+	end)
+end
+
+-- COMBAT
+toggle(frames["Combat"],"Hitbox",10,"Hitbox")
+slider(frames["Combat"],"Size",0,100,50,"Size")
+
+-- PLAYER
+slider(frames["Player"],"Speed",16,100,10,"Speed")
+toggle(frames["Player"],"Fly",60,"Fly")
+
+-- VISUALS
+toggle(frames["Visuals"],"ESP",10,"ESP")
+
+-- AIM
+toggle(frames["Aim"],"Target Lock",10,"Target")
+
+-- CONFIG (THEMES)
+local themeBtn = Instance.new("TextButton", frames["Config"])
+themeBtn.Size = UDim2.new(0.8,0,0,30)
+themeBtn.Position = UDim2.new(0.1,0,0,10)
+themeBtn.Text = "Theme: RED"
+themeBtn.BackgroundColor3 = Color3.fromRGB(255,0,0)
+Instance.new("UICorner", themeBtn)
+
+themeBtn.MouseButton1Click:Connect(function()
+	if Settings.Theme=="Red" then
+		Settings.Theme="Blue"
+		themeBtn.Text="Theme: BLUE"
+		themeBtn.BackgroundColor3=Color3.fromRGB(0,100,255)
+	else
+		Settings.Theme="Red"
+		themeBtn.Text="Theme: RED"
+		themeBtn.BackgroundColor3=Color3.fromRGB(255,0,0)
+	end
+end)
+
+-- PLAYER LIST
+local list = Instance.new("TextLabel", frames["Visuals"])
+list.Size = UDim2.new(1,0,0,100)
+list.Position = UDim2.new(0,0,0,50)
+list.TextColor3 = Color3.new(1,1,1)
+list.BackgroundTransparency = 1
+list.TextScaled = true
+
+-- OPEN
+open.MouseButton1Click:Connect(function()
+	main.Visible = not main.Visible
+end)
+
+-- TARGET
+local function getClosest()
+	local closest,dist=nil,math.huge
+	for _,p in pairs(Players:GetPlayers()) do
+		if p~=LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+			local mag = (LP.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+			if mag < dist then
+				dist=mag
+				closest=p
+			end
+		end
+	end
+	return closest
+end
+
+-- LOOP
+RunService.RenderStepped:Connect(function()
+	local text="Players:\n"
+	
+	for _,p in pairs(Players:GetPlayers()) do
+		text = text..p.Name.."\n"
+		
+		if p~=LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+			local hrp = p.Character.HumanoidRootPart
+			
+			if Settings.Hitbox then
+				hrp.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
+				hrp.Transparency = 0.4
+				hrp.Material = Enum.Material.Neon
+				hrp.Color = Settings.Theme=="Red" and Color3.fromRGB(255,0,0) or Color3.fromRGB(0,100,255)
 			end
 			
-			bv.Velocity = workspace.CurrentCamera.CFrame.LookVector * flySpeed
+			if Settings.ESP then
+				if not p.Character:FindFirstChild("ESP") then
+					local h = Instance.new("Highlight",p.Character)
+					h.Name="ESP"
+					h.FillColor = Settings.Theme=="Red" and Color3.fromRGB(255,0,0) or Color3.fromRGB(0,100,255)
+					h.FillTransparency=0.5
+				end
+			end
 		end
-	else
-		if bv then bv:Destroy() bv=nil end
 	end
-end)
-
--- INPUTS
-box(150,"Hitbox Size (0-300)").FocusLost:Connect(function(self)
-	local v = tonumber(self.Text)
-	if v then hitboxSize = math.clamp(v,0,300) end
-end)
-
-box(190,"Transparency (0-1)").FocusLost:Connect(function(self)
-	local v = tonumber(self.Text)
-	if v then transparency = math.clamp(v,0,1) end
-end)
-
-box(230,"Fly Speed").FocusLost:Connect(function(self)
-	local v = tonumber(self.Text)
-	if v then flySpeed = v end
+	
+	list.Text = text
+	
+	if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+		LP.Character.Humanoid.WalkSpeed = Settings.Speed
+	end
+	
+	if Settings.Fly and LP.Character then
+		LP.Character.HumanoidRootPart.Velocity = Vector3.new(0,50,0)
+	end
+	
+	if Settings.Target and LP.Character then
+		currentTarget = getClosest()
+		if currentTarget and currentTarget.Character then
+			Camera.CFrame = CFrame.new(Camera.CFrame.Position, currentTarget.Character.HumanoidRootPart.Position)
+		end
+	end
 end)

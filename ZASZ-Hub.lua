@@ -1,230 +1,317 @@
--- ZASZ HUB FULL POLISHED DEV
+-- ZASZ HUB v13 MOBILE + SOPHIE RAIN BEACH EDITION
+-- Draggable • Collapsible Circle • Mobile Optimized
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui")
 
-local LP = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+-- ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ZASZ_HUB_MOBILE"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 1000
+ScreenGui.Parent = gui
 
--- SETTINGS
-local Settings = {
-	Hitbox=false,
-	Size=10,
-	ESP=false,
-	Speed=16,
-	Fly=false,
-	Target=false
-}
+-- COLLAPSIBLE CIRCLE BUTTON (Mobile Optimized)
+local CircleBtn = Instance.new("ImageButton")
+CircleBtn.Name = "ToggleBtn"
+CircleBtn.Parent = ScreenGui
+CircleBtn.BackgroundColor3 = Color3.fromRGB(255,50,150)
+CircleBtn.Position = UDim2.new(0,20,0,100)  -- Mobile safe position
+CircleBtn.Size = UDim2.new(0,80,0,80)
+CircleBtn.Image = "rbxassetid://3926305904"  -- Circle icon
+CircleBtn.ImageTransparency = 0.2
+CircleBtn.ImageColor3 = Color3.fromRGB(255,255,255)
 
--- GUI
-local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "ZASZ_POLISHED"
+local CircleCorner = Instance.new("UICorner")
+CircleCorner.CornerRadius = UDim.new(1,40)
+CircleCorner.Parent = CircleBtn
 
--- FLOAT BUTTON
-local open = Instance.new("TextButton", gui)
-open.Size = UDim2.new(0,50,0,50)
-open.Position = UDim2.new(0.05,0,0.4,0)
-open.Text = "Z"
-open.BackgroundColor3 = Color3.fromRGB(255,0,0)
-open.TextScaled = true
-open.Active = true
-open.Draggable = true
-Instance.new("UICorner", open).CornerRadius = UDim.new(1,0)
+local CircleStroke = Instance.new("UIStroke")
+CircleStroke.Color = Color3.fromRGB(255,100,200)
+CircleStroke.Thickness = 3
+CircleStroke.Parent = CircleBtn
 
--- MAIN
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0,340,0,280)
-main.Position = UDim2.new(0.1,0,0.3,0)
-main.BackgroundColor3 = Color3.fromRGB(18,18,18)
-main.Active = true
-main.Draggable = true
-Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+-- MAIN FRAME (Mobile Small Size)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(8,8,18)
+MainFrame.Position = UDim2.new(0.5, -180, 0.5, -250)
+MainFrame.Size = UDim2.new(0,360,0,500)  -- Mobile friendly size
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.ClipsDescendants = true
 
--- TITLE
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1,0,0,30)
-title.Text = "👑 ZASZ HUB POLISHED"
-title.TextColor3 = Color3.fromRGB(255,0,0)
-title.BackgroundTransparency = 1
+-- Frame Corner
+local FrameCorner = Instance.new("UICorner")
+FrameCorner.CornerRadius = UDim.new(0,20)
+FrameCorner.Parent = MainFrame
 
--- TABS
-local tabs = {"Combat","Player","Visuals","Aim"}
-local frames = {}
+-- Frame Stroke
+local FrameStroke = Instance.new("UIStroke")
+FrameStroke.Color = Color3.fromRGB(255,100,200)
+FrameStroke.Thickness = 2
+FrameStroke.Parent = MainFrame
 
-for i,name in ipairs(tabs) do
-	local btn = Instance.new("TextButton", main)
-	btn.Size = UDim2.new(0.24,0,0,25)
-	btn.Position = UDim2.new((i-1)*0.25,0,0,35)
-	btn.Text = name
-	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
-	Instance.new("UICorner", btn)
-	
-	local frame = Instance.new("Frame", main)
-	frame.Size = UDim2.new(1,0,0,200)
-	frame.Position = UDim2.new(0,0,0,65)
-	frame.BackgroundTransparency = 1
-	frame.Visible = (i==1)
-	frames[name]=frame
-	
-	btn.MouseButton1Click:Connect(function()
-		for _,f in pairs(frames) do f.Visible=false end
-		frame.Visible=true
-	end)
+-- SOPHIE RAIN BEACH BACKGROUND
+local SophieBG = Instance.new("ImageLabel")
+SophieBG.Name = "SophieRainBeach"
+SophieBG.Parent = MainFrame
+SophieBG.BackgroundTransparency = 1
+SophieBG.Position = UDim2.new(0,0,0,0)
+SophieBG.Size = UDim2.new(1,0,1,0)
+SophieBG.Image = "rbxassetid://18416517881"  -- Sophie Rain beach sexy
+SophieBG.ImageColor3 = Color3.fromRGB(255,240,255)
+SophieBG.ImageTransparency = 0.72
+SophieBG.ScaleType = Enum.ScaleType.Crop
+SophieBG.ZIndex = 0
+
+-- Dark Overlay
+local Overlay = Instance.new("Frame")
+Overlay.Parent = MainFrame
+Overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
+Overlay.BackgroundTransparency = 0.38
+Overlay.Size = UDim2.new(1,0,1,0)
+Overlay.ZIndex = 1
+
+-- TITLE BAR (Draggable Area)
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Parent = MainFrame
+TitleBar.BackgroundColor3 = Color3.fromRGB(25,15,40)
+TitleBar.Size = UDim2.new(1,0,0,55)
+TitleBar.ZIndex = 10
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0,20)
+TitleCorner.Parent = TitleBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = TitleBar
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Size = UDim2.new(1,-100,1,0)
+TitleLabel.Position = UDim2.new(0,20,0,0)
+TitleLabel.Text = "ZASZ HUB v13 | SOPHIE RAIN 🌊"
+TitleLabel.TextColor3 = Color3.fromRGB(255,150,255)
+TitleLabel.TextScaled = true
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.ZIndex = 11
+
+-- CLOSE BUTTON
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = TitleBar
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
+CloseBtn.Position = UDim2.new(1,-55,0,8)
+CloseBtn.Size = UDim2.new(0,45,0,38)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255,255,255)
+CloseBtn.TextScaled = true
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.ZIndex = 11
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0,12)
+CloseCorner.Parent = CloseBtn
+
+-- SCROLL CONTENT
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Parent = MainFrame
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.BorderSizePixel = 0
+ScrollFrame.Position = UDim2.new(0,15,0,65)
+ScrollFrame.Size = UDim2.new(1,-30,1,-80)
+ScrollFrame.ScrollBarThickness = 5
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255,150,255)
+ScrollFrame.CanvasSize = UDim2.new(0,0,0,900)
+ScrollFrame.ScrollBarImageTransparency = 0.3
+ScrollFrame.ZIndex = 3
+
+-- TOGGLE FUNCTION (Mobile Optimized)
+local function CreateToggle(yPos, text, callback)
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Parent = ScrollFrame
+    ToggleFrame.BackgroundTransparency = 1
+    ToggleFrame.Size = UDim2.new(1,0,0,55)
+    ToggleFrame.Position = UDim2.new(0,0,0,yPos)
+    
+    local Label = Instance.new("TextLabel")
+    Label.Parent = ToggleFrame
+    Label.BackgroundTransparency = 1
+    Label.Size = UDim2.new(1,-90,1,0)
+    Label.Position = UDim2.new(0,15,0,0)
+    Label.Text = text
+    Label.TextColor3 = Color3.fromRGB(255,255,255)
+    Label.TextScaled = true
+    Label.Font = Enum.Font.Gotham
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.ZIndex = 4
+    
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Parent = ToggleFrame
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(255,100,150)
+    ToggleBtn.Size = UDim2.new(0,75,0,40)
+    ToggleBtn.Position = UDim2.new(1,-85,0.15,0)
+    ToggleBtn.Text = "OFF"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    ToggleBtn.TextScaled = true
+    ToggleBtn.Font = Enum.Font.GothamBold
+    ToggleBtn.ZIndex = 4
+    
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0,15)
+    BtnCorner.Parent = ToggleBtn
+    
+    local BtnStroke = Instance.new("UIStroke")
+    BtnStroke.Color = Color3.fromRGB(255,200,255)
+    BtnStroke.Thickness = 1.5
+    BtnStroke.Parent = ToggleBtn
+    
+    local enabled = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        ToggleBtn.BackgroundColor3 = enabled and Color3.fromRGB(100,255,150) or Color3.fromRGB(255,100,150)
+        ToggleBtn.Text = enabled and "ON" or "OFF"
+        callback(enabled)
+    end)
 end
 
--- TOGGLE
-local function toggle(parent,text,y,key)
-	local t = Instance.new("TextButton", parent)
-	t.Size = UDim2.new(0.8,0,0,30)
-	t.Position = UDim2.new(0.1,0,0,y)
-	t.Text = text.." : OFF"
-	t.BackgroundColor3 = Color3.fromRGB(170,0,0)
-	Instance.new("UICorner", t)
-
-	t.MouseButton1Click:Connect(function()
-		Settings[key]=not Settings[key]
-		t.Text = text.." : "..(Settings[key] and "ON" or "OFF")
-		t.BackgroundColor3 = Settings[key] and Color3.fromRGB(0,170,0) or Color3.fromRGB(170,0,0)
-	end)
-end
-
--- 🔥 FIXED SLIDER
-local function slider(parent,text,min,max,y,key)
-	local label = Instance.new("TextLabel", parent)
-	label.Size = UDim2.new(1,0,0,20)
-	label.Position = UDim2.new(0,0,0,y)
-	label.Text = text..": "..Settings[key]
-	label.TextColor3 = Color3.new(1,1,1)
-	label.BackgroundTransparency = 1
-	
-	local bar = Instance.new("Frame", parent)
-	bar.Size = UDim2.new(0.8,0,0,10)
-	bar.Position = UDim2.new(0.1,0,0,y+25)
-	bar.BackgroundColor3 = Color3.fromRGB(40,40,40)
-	Instance.new("UICorner", bar)
-	
-	local fill = Instance.new("Frame", bar)
-	fill.Size = UDim2.new(Settings[key]/max,0,1,0)
-	fill.BackgroundColor3 = Color3.fromRGB(255,0,0)
-	Instance.new("UICorner", fill)
-	
-	local knob = Instance.new("Frame", bar)
-	knob.Size = UDim2.new(0,16,0,16)
-	knob.Position = UDim2.new(Settings[key]/max,-8,0.5,-8)
-	knob.BackgroundColor3 = Color3.fromRGB(255,0,0)
-	Instance.new("UICorner", knob)
-
-	local dragging = false
-
-	local function update(input)
-		local rel = (input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X
-		rel = math.clamp(rel,0,1)
-		local val = math.floor(min + (max-min)*rel)
-		
-		fill.Size = UDim2.new(rel,0,1,0)
-		knob.Position = UDim2.new(rel,-8,0.5,-8)
-		label.Text = text..": "..val
-		
-		Settings[key] = val
-	end
-
-	knob.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-		end
-	end)
-
-	UIS.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
-		end
-	end)
-
-	UIS.InputChanged:Connect(function(input)
-		if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
-			update(input)
-		end
-	end)
-
-	bar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-			update(input)
-		end
-	end)
-end
-
--- COMBAT
-toggle(frames["Combat"],"Hitbox",10,"Hitbox")
-slider(frames["Combat"],"Size",0,100,50,"Size")
-
--- PLAYER
-slider(frames["Player"],"Speed",16,100,10,"Speed")
-toggle(frames["Player"],"Fly",60,"Fly")
-
--- VISUALS
-toggle(frames["Visuals"],"ESP",10,"ESP")
-
--- AIM
-toggle(frames["Aim"],"Target Lock",10,"Target")
-
--- OPEN
-open.MouseButton1Click:Connect(function()
-	main.Visible = not main.Visible
+-- UNIVERSAL FEATURES
+CreateToggle(10, "🚀 Super Speed", function(state)
+    if state and player.Character then
+        player.Character.Humanoid.WalkSpeed = 120
+    end
 end)
 
--- TARGET
-local function getClosest()
-	local closest,dist=nil,math.huge
-	for _,p in pairs(Players:GetPlayers()) do
-		if p~=LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-			local mag = (LP.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-			if mag < dist then
-				dist=mag
-				closest=p
-			end
-		end
-	end
-	return closest
+CreateToggle(75, "🦘 High Jump", function(state)
+    if player.Character then
+        player.Character.Humanoid.JumpPower = state and 180 or 50
+    end
+end)
+
+CreateToggle(140, "👻 Noclip Walk", function(state)
+    spawn(function()
+        while state do
+            if player.Character then
+                for _, part in pairs(player.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+            wait(0.1)
+        end
+    end)
+end)
+
+CreateToggle(205, "✈️ Fly (Hold SPACE)", function(state)
+    local flySpeed = 50
+    spawn(function()
+        while state do
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local root = player.Character.HumanoidRootPart
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                    root.Velocity = Vector3.new(0,flySpeed,0)
+                end
+            end
+            wait()
+        end
+    end)
+end)
+
+CreateToggle(270, "🌈 Rainbow Sophie", function(state)
+    if state then
+        spawn(function()
+            while state do
+                SophieBG.ImageColor3 = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                FrameStroke.Color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                CircleStroke.Color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                wait(0.1)
+            end
+            SophieBG.ImageColor3 = Color3.fromRGB(255,240,255)
+            FrameStroke.Color = Color3.fromRGB(255,100,200)
+            CircleStroke.Color = Color3.fromRGB(255,100,200)
+        end)
+    end
+end)
+
+CreateToggle(335, "💖 Heart Beat Effect", function(state)
+    if state then
+        spawn(function()
+            while state do
+                local pulse = 0.68 + math.sin(tick() * 4) * 0.08
+                SophieBG.ImageTransparency = pulse
+                Overlay.BackgroundTransparency = pulse + 0.1
+                wait(0.05)
+            end
+        end)
+    end
+end)
+
+-- TOGGLE ANIMATION (CIRCLE BUTTON)
+local function toggleUI()
+    MainFrame.Visible = not MainFrame.Visible
+    CircleBtn.ImageTransparency = MainFrame.Visible and 0.1 or 0.3
+    TweenService:Create(CircleBtn, TweenInfo.new(0.3), {
+        Size = MainFrame.Visible and UDim2.new(0,70,0,70) or UDim2.new(0,80,0,80),
+        Rotation = MainFrame.Visible and 360 or 0
+    }):Play()
 end
 
--- LOOP
-RunService.RenderStepped:Connect(function()
-	for _,p in pairs(Players:GetPlayers()) do
-		if p~=LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-			local hrp = p.Character.HumanoidRootPart
-			
-			if Settings.Hitbox then
-				hrp.Size = Vector3.new(Settings.Size,Settings.Size,Settings.Size)
-				hrp.Transparency = 0.4
-				hrp.Material = Enum.Material.Neon
-				hrp.Color = Color3.fromRGB(255,0,0)
-			end
-			
-			if Settings.ESP then
-				if not p.Character:FindFirstChild("ESP") then
-					local h = Instance.new("Highlight",p.Character)
-					h.Name="ESP"
-					h.FillColor=Color3.fromRGB(255,0,0)
-					h.FillTransparency=0.5
-				end
-			end
-		end
-	end
-	
-	if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-		LP.Character.Humanoid.WalkSpeed = Settings.Speed
-	end
-	
-	if Settings.Fly and LP.Character then
-		LP.Character.HumanoidRootPart.Velocity = Vector3.new(0,50,0)
-	end
-	
-	if Settings.Target and LP.Character then
-		local t = getClosest()
-		if t and t.Character then
-			Camera.CFrame = CFrame.new(Camera.CFrame.Position, t.Character.HumanoidRootPart.Position)
-		end
-	end
+CircleBtn.MouseButton1Click:Connect(toggleUI)
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
 end)
+
+-- MOBILE DRAG FIX
+local dragging, dragStart, startPos
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+
+TitleBar.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.X.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+TitleBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- CIRCLE DRAG (Mobile)
+local circleDragging, circleStart, circlePos
+CircleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        circleDragging = true
+        circleStart = input.Position
+        circlePos = CircleBtn.Position
+    end
+end)
+
+CircleBtn.InputChanged:Connect(function(input)
+    if circleDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - circleStart
+        CircleBtn.Position = UDim2.new(0, circlePos.X.Offset + delta.X, 0, circlePos.Y.Offset + delta.Y)
+    end
+end)
+
+CircleBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        circleDragging = false
+    end
+end)
+
+print("🌊 ZASZ HUB v13 MOBILE SOPHIE RAIN BEACH EDITION LOADED! 💖")
